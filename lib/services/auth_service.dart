@@ -81,8 +81,8 @@ class AuthService {
 
       String? token =
           userData?['access_token'] ??
-              userData?['token'] ??
-              userData?['accessToken'];
+          userData?['token'] ??
+          userData?['accessToken'];
 
       final response = await http.get(
         Uri.parse(_profileUrl),
@@ -117,8 +117,8 @@ class AuthService {
 
       String? token =
           userData?['access_token'] ??
-              userData?['token'] ??
-              userData?['accessToken'];
+          userData?['token'] ??
+          userData?['accessToken'];
 
       final response = await http.get(
         Uri.parse(_dashboardUrl),
@@ -386,7 +386,7 @@ class AuthService {
   }) async {
     try {
       final userData = await PrefService.getUserData();
-      final token = userData? ['accessToken'] as String?;
+      final token = userData?['accessToken'] as String?;
 
       final uri = Uri.parse(_businessAppsUrl).replace(
         queryParameters: {
@@ -397,11 +397,11 @@ class AuthService {
       );
 
       final response = await http.get(
-          uri,
-          headers: {
-            'Content-Type': 'application/json',
-            if (token != null) 'Authorization': 'Bearer $token',
-          }
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
       debugPrintApiResponse(response);
@@ -501,6 +501,67 @@ class AuthService {
     } catch (e) {
       if (e is NetworkException || e is Exception) rethrow;
       throw Exception('Failed to update app');
+    }
+  }
+
+  static Future<String> generateBusinessAppSecret(String clientId) async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final response = await http.get(
+        Uri.parse('$_businessAppsUrl/$clientId/secret'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['secret'] ?? body['clientSecret'] ?? response.body;
+      } else {
+        throw Exception(
+          'Failed to generate secret (status ${response.statusCode})',
+        );
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to generate secret');
+    }
+  }
+
+  static Future<void> deleteBusinessApp(String clientId) async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final uri = Uri.parse(
+        _businessAppsUrl,
+      ).replace(queryParameters: {'clientIds': clientId});
+
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete app (status ${response.statusCode})');
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to delete app');
     }
   }
 
