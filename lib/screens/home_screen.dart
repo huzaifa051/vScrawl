@@ -3,11 +3,25 @@ import 'package:vscrawl/providers/user_provider.dart';
 import '../utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/organization_stats_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final void Function(String? status, String label) onCategoryTap;
 
   const HomeScreen({super.key, required this.onCategoryTap});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OrganizationStatsProvider>().fetchOrganizationStats();
+    });
+  }
 
   String _getFirstName(String? fullName) {
     if (fullName == null || fullName.trim().isEmpty) return 'User';
@@ -25,255 +39,353 @@ class HomeScreen extends StatelessWidget {
             await Future.wait([
               context.read<UserProvider>().fetchUserProfile(),
               context.read<DashboardProvider>().fetchDashboardData(),
+              context
+                  .read<OrganizationStatsProvider>()
+                  .fetchOrganizationStats(),
             ]);
           },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Consumer<UserProvider>(
-                  builder: (context, userProvider, _) {
-                    final firstName = _getFirstName(userProvider.user?.name);
-                    return Text(
-                      'Hello $firstName!',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
-                        color: Colors.black,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Consumer<UserProvider>(
+                        builder: (context, userProvider, _) {
+                          final firstName = _getFirstName(
+                            userProvider.user?.name,
+                          );
+                          return Text(
+                            'Hello $firstName!',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                              color: Colors.black,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                Consumer<DashboardProvider>(
-                  builder: (context, dashProvider, _) {
-                    final dash = dashProvider.dashboardData;
+                      Consumer<DashboardProvider>(
+                        builder: (context, dashProvider, _) {
+                          final dash = dashProvider.dashboardData;
 
-                    final pending =
-                        dash?.pendingDocCount?.toString().padLeft(2, '0') ??
-                        '00';
-                    final signed =
-                        dash?.signedDocCount?.toString().padLeft(2, '0') ??
-                        '00';
-                    final completed =
-                        dash?.completedDocCount?.toString().padLeft(2, '0') ??
-                        '00';
-                    final draft =
-                        dash?.draftDocCount?.toString().padLeft(2, '0') ?? '00';
-                    final sent =
-                        dash?.sentDocCount?.toString().padLeft(2, '0') ?? '00';
-                    final voidCount =
-                        dash?.voidDocCount?.toString().padLeft(2, '0') ?? '00';
+                          final pending = dash?.pendingDocCount ?? 0;
+                          final signed = dash?.signedDocCount ?? 0;
+                          final completed = dash?.completedDocCount ?? 0;
+                          final draft = dash?.draftDocCount ?? 0;
+                          final sent = dash?.sentDocCount ?? 0;
+                          final voidCount = dash?.voidDocCount ?? 0;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          final totalDocuments =
+                              pending +
+                              signed +
+                              sent +
+                              completed +
+                              voidCount +
+                              draft;
+
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1B2559),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Get a document signed',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Send a document to others for signing',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 14),
+                                      ElevatedButton.icon(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.send_outlined,
+                                          size: 16,
+                                        ),
+                                        label: const Text('Request Signature'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.accent,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  width: 90,
+                                  height: 90,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.accent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '$totalDocuments',
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.accent,
+                                        ),
+                                      ),
+                                      const Text(
+                                        'documents',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Sent $sent',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.15,
                                   ),
-                                  Container(
-                                    width: 3,
-                                    height: 24,
-                                    color: AppColors.inputBorder,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Waiting for you $pending',
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.description_outlined,
+                                  color: AppColors.accent,
+                                  size: 20,
+                                ),
                               ),
-                              const SizedBox(height: 8),
-                              const Divider(height: 1),
-                              const SizedBox(height: 8),
+                              const SizedBox(width: 10),
                               const Text(
-                                'Get a document signed',
+                                'Documents',
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black,
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              const Text(
-                                'Send a document to others for e-signing',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              ElevatedButton(
-                                onPressed: () {},
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.accent,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 21,
-                                    vertical: 8,
-                                  ),
-                                ),
-                                child: Text(
-                                  'Request signature',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    onCategoryTap('PENDING', 'Pending'),
-                                child: _StatTile(
-                                  value: '00',
-                                  label: 'Pending',
-                                  color: AppColors.statPending,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => onCategoryTap('SIGNED', 'Signed'),
-                                child: _StatTile(
-                                  value: signed,
-                                  label: 'Signed',
-                                  color: AppColors.statSigned,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => onCategoryTap('SENT', 'Sent'),
-                                child: _StatTile(
-                                  value: sent,
-                                  label: 'Sent',
-                                  color: AppColors.statSent,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    onCategoryTap('COMPLETED', 'Completed'),
-                                child: _StatTile(
-                                  value: completed,
-                                  label: 'Completed',
-                                  color: AppColors.statCompleted,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        const Text(
-                          "Organizations's Stats",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
-                            color: Colors.black,
+                          _ViewAllButton(
+                            onTap: () =>
+                                widget.onCategoryTap(null, 'All Documents'),
                           ),
-                        ),
-                        const SizedBox(height: 12),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
 
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
+                      Consumer<DashboardProvider>(
+                        builder: (context, dashProvider, _) {
+                          final dash = dashProvider.dashboardData;
+
+                          final pending =
+                              dash?.pendingDocCount?.toString() ?? '0';
+                          final signed =
+                              dash?.signedDocCount?.toString() ?? '0';
+                          final sent = dash?.sentDocCount?.toString() ?? '0';
+                          final completed =
+                              dash?.completedDocCount?.toString() ?? '0';
+                          final draft = dash?.draftDocCount?.toString() ?? '0';
+                          final voidCount =
+                              dash?.voidDocCount?.toString() ?? '0';
+
+                          return GridView.count(
+                            crossAxisCount: 3,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.85,
                             children: [
-                              Expanded(
-                                child: _StatTile(
-                                  value: '00',
-                                  label: 'Templates',
-                                  color: AppColors.statTemplates,
+                              _DocStatCard(
+                                icon: Icons.access_time,
+                                iconColor: const Color(0xFFE07A2C),
+                                iconBg: const Color(0xFFFCEEE0),
+                                value: pending,
+                                label: 'Pending',
+                                onTap: () =>
+                                    widget.onCategoryTap('PENDING', 'Pending'),
+                              ),
+                              _DocStatCard(
+                                icon: Icons.edit_outlined,
+                                iconColor: const Color(0xFF8B5CF6),
+                                iconBg: const Color(0xFFF1EBFB),
+                                value: signed,
+                                label: 'Signed',
+                                onTap: () =>
+                                    widget.onCategoryTap('SIGNED', 'Signed'),
+                              ),
+                              _DocStatCard(
+                                icon: Icons.send_outlined,
+                                iconColor: const Color(0xFF2D9CDB),
+                                iconBg: const Color(0xFFE4F2FA),
+                                value: sent,
+                                label: 'Sent',
+                                onTap: () =>
+                                    widget.onCategoryTap('SENT', 'Sent'),
+                              ),
+                              _DocStatCard(
+                                icon: Icons.check_circle_outline,
+                                iconColor: const Color(0xFF27AE60),
+                                iconBg: const Color(0xFFE4F7EB),
+                                value: completed,
+                                label: 'Completed',
+                                onTap: () => widget.onCategoryTap(
+                                  'COMPLETED',
+                                  'Completed',
                                 ),
                               ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: _StatTile(
-                                  value: '00',
-                                  label: 'Active Users',
-                                  color: AppColors.statActiveUsers,
+                              _DocStatCard(
+                                icon: Icons.article_outlined,
+                                iconColor: const Color(0xFF2F80ED),
+                                iconBg: const Color(0xFFE6EEFB),
+                                value: draft,
+                                label: 'Draft',
+                                onTap: () =>
+                                    widget.onCategoryTap('DRAFT', 'Draft'),
+                              ),
+                              _DocStatCard(
+                                icon: Icons.cancel_outlined,
+                                iconColor: const Color(0xFFEB5757),
+                                iconBg: const Color(0xFFFBE7E7),
+                                value: voidCount,
+                                label: 'Void',
+                                onTap: () =>
+                                    widget.onCategoryTap('VOID', 'Void'),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.account_balance_outlined,
+                                  color: AppColors.accent,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                "Organization's Stats",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                          _ViewAllButton(onTap: () {}),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      Consumer<OrganizationStatsProvider>(
+                        builder: (context, orgStats, _) {
+                          return GridView.count(
+                            crossAxisCount: 3,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.85,
+                            children: [
+                              _DocStatCard(
+                                icon: Icons.copy_outlined,
+                                iconColor: const Color(0xFF2D9CDB),
+                                iconBg: const Color(0xFFE4F2FA),
+                                value: '${orgStats.templatesCount}',
+                                label: 'Templates',
+                              ),
+                              _DocStatCard(
+                                icon: Icons.groups_outlined,
+                                iconColor: const Color(0xFF8B5CF6),
+                                iconBg: const Color(0xFFF1EBFB),
+                                value: '${orgStats.usersCount}',
+                                label: 'Users',
+                              ),
+                              _DocStatCard(
+                                icon: Icons.dashboard_customize_outlined,
+                                iconColor: const Color(0xFFE07A2C),
+                                iconBg: const Color(0xFFFCEEE0),
+                                value: '${orgStats.businessAppsCount}',
+                                label: 'Business Apps',
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -281,51 +393,98 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _StatTile extends StatelessWidget {
+class _DocStatCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
   final String value;
   final String label;
-  final Color color;
+  final VoidCallback? onTap;
 
-  const _StatTile({
+  const _DocStatCard({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
     required this.value,
     required this.label,
-    required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20),
-      height: 115,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(14),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: iconColor.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            textAlign: TextAlign.center,
-            value,
-            style: const TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+    );
+  }
+}
+
+class _ViewAllButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ViewAllButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.accent),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'View All',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.accent,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            textAlign: TextAlign.center,
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_forward, size: 14, color: AppColors.accent),
+          ],
+        ),
       ),
     );
   }

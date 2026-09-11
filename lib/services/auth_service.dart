@@ -34,6 +34,8 @@ class AuthService {
       'https://api.staging.vscrawl.com/organization/v1';
   static const String _businessAppsUrl =
       'https://api.staging.vscrawl.com/organization/v1/apps';
+  static const String _organizationStatsUrl =
+      'https://api.staging.vscrawl.com/organization/v1/count/organization';
 
   static Future<Map<String, dynamic>> signIn({
     required String email,
@@ -562,6 +564,35 @@ class AuthService {
     } catch (e) {
       if (e is NetworkException || e is Exception) rethrow;
       throw Exception('Failed to delete app');
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchOrganizationStats() async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final response = await http.get(
+        Uri.parse(_organizationStatsUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+      debugPrintApiResponse(response);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception (
+          'Failed to load organization stats (status ${response.statusCode})',
+        );
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to fetch organization stats');
     }
   }
 

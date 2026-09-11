@@ -59,7 +59,7 @@ class _ClientSecretDialogState extends State<ClientSecretDialog> {
                         : Icons.visibility_outlined,
                     size: 20,
                   ),
-                  onPressed: () => setState(() => _isVisible != _isVisible),
+                  onPressed: () => setState(() => _isVisible = !_isVisible),
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_outlined, size: 20),

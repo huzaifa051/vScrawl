@@ -5,6 +5,7 @@ import 'package:vscrawl/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/organization_provider.dart';
+import '../providers/organization_stats_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,7 @@ void main() async {
           value: organizationProvider..fetchOrganization(),
         ),
         ChangeNotifierProvider(create: (_) => BusinessAppProvider()),
+        ChangeNotifierProvider(create: (_) => OrganizationStatsProvider()),
       ],
       child: const MyApp(),
     ),
