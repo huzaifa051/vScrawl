@@ -4,11 +4,18 @@ import '../utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/organization_stats_provider.dart';
+import '../screens/business_app_screen.dart';
+import '../screens/users_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(String? status, String label) onCategoryTap;
+  final VoidCallback onNavigateToOrganization;
 
-  const HomeScreen({super.key, required this.onCategoryTap});
+  const HomeScreen({
+    super.key,
+    required this.onCategoryTap,
+    required this.onNavigateToOrganization,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -21,11 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OrganizationStatsProvider>().fetchOrganizationStats();
     });
-  }
-
-  String _getFirstName(String? fullName) {
-    if (fullName == null || fullName.trim().isEmpty) return 'User';
-    return fullName.trim().split(' ').first;
   }
 
   @override
@@ -57,15 +59,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Consumer<UserProvider>(
                         builder: (context, userProvider, _) {
-                          final firstName = _getFirstName(
-                            userProvider.user?.name,
-                          );
-                          return Text(
-                            'Hello $firstName!',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 20,
-                              color: Colors.black,
+                          final fullName =
+                              (userProvider.user?.name != null &&
+                                  userProvider.user!.name!.isNotEmpty)
+                              ? userProvider.user!.name!
+                              : 'User';
+                          return Text.rich(
+                            TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: 'Hello ',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 16,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '$fullName ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                const TextSpan(
+                                  text: '👋',
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -247,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 10,
-                            childAspectRatio: 0.85,
+                            childAspectRatio: 1.0,
                             children: [
                               _DocStatCard(
                                 icon: Icons.access_time,
@@ -341,7 +363,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          _ViewAllButton(onTap: () {}),
+                          _ViewAllButton(
+                            onTap: widget.onNavigateToOrganization,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -354,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 10,
-                            childAspectRatio: 0.85,
+                            childAspectRatio: 1.0,
                             children: [
                               _DocStatCard(
                                 icon: Icons.copy_outlined,
@@ -369,6 +393,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 iconBg: const Color(0xFFF1EBFB),
                                 value: '${orgStats.usersCount}',
                                 label: 'Users',
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const UsersScreen(),
+                                    ),
+                                  );
+                                },
                               ),
                               _DocStatCard(
                                 icon: Icons.dashboard_customize_outlined,
@@ -376,6 +407,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 iconBg: const Color(0xFFFCEEE0),
                                 value: '${orgStats.businessAppsCount}',
                                 label: 'Business Apps',
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => BusinessAppScreen(),
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           );

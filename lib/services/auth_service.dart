@@ -36,6 +36,8 @@ class AuthService {
       'https://api.staging.vscrawl.com/organization/v1/apps';
   static const String _organizationStatsUrl =
       'https://api.staging.vscrawl.com/organization/v1/count/organization';
+  static const String _usersUrl =
+      'https://api.staging.vscrawl.com/organization/v1/users';
 
   static Future<Map<String, dynamic>> signIn({
     required String email,
@@ -584,7 +586,7 @@ class AuthService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        throw Exception (
+        throw Exception(
           'Failed to load organization stats (status ${response.statusCode})',
         );
       }
@@ -593,6 +595,45 @@ class AuthService {
     } catch (e) {
       if (e is NetworkException || e is Exception) rethrow;
       throw Exception('Failed to fetch organization stats');
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchOrganizationUsers({
+    int page = 0,
+    int size = 10,
+  }) async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final uri = Uri.parse(_usersUrl).replace(
+        queryParameters: {
+          'page': page.toString(),
+          'size': size.toString(),
+          'sort': ['isOwner,desc', 'createdAt,desc'],
+        },
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load users (status ${response.statusCode})');
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to fetch users');
     }
   }
 

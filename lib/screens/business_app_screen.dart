@@ -8,7 +8,9 @@ import '../screens/update_business_app_screen.dart';
 import '../widgets/client_secret_dialog.dart';
 
 class BusinessAppScreen extends StatefulWidget {
-  const BusinessAppScreen({super.key});
+  final VoidCallback? onBack;
+
+  const BusinessAppScreen({super.key, this.onBack});
 
   @override
   State<BusinessAppScreen> createState() => _BusinessAppScreenState();
@@ -36,6 +38,10 @@ class _BusinessAppScreenState extends State<BusinessAppScreen> {
         backgroundColor: AppColors.pageBackground,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
+        ),
         title: const Text(
           'Business App',
           style: TextStyle(fontWeight: FontWeight.w700),
@@ -141,14 +147,19 @@ class _BusinessAppScreenState extends State<BusinessAppScreen> {
                           final confirmed = await showDialog<bool>(
                             context: context,
                             builder: (_) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                               backgroundColor: AppColors.pageBackground,
                               title: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: const [
                                   Text(
                                     'Confirm Delete',
-                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 20,
+                                    ),
                                   ),
                                   SizedBox(height: 12),
                                   Divider(height: 1, thickness: 1),
@@ -167,12 +178,18 @@ class _BusinessAppScreenState extends State<BusinessAppScreen> {
                                         height: 50,
                                         child: OutlinedButton(
                                           style: OutlinedButton.styleFrom(
-                                            side: const BorderSide(color: AppColors.textSecondary),
+                                            side: const BorderSide(
+                                              color: AppColors.textSecondary,
+                                            ),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadiusGeometry.circular(8),
+                                              borderRadius:
+                                                  BorderRadiusGeometry.circular(
+                                                    8,
+                                                  ),
                                             ),
                                           ),
-                                          onPressed: () => Navigator.of(context).pop(false),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(false),
                                           child: const Text(
                                             'No',
                                             style: TextStyle(
@@ -190,16 +207,23 @@ class _BusinessAppScreenState extends State<BusinessAppScreen> {
                                         child: ElevatedButton(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.accent,
-                                            foregroundColor: AppColors.textSecondary,
+                                            foregroundColor:
+                                                AppColors.textSecondary,
                                             elevation: 0,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadiusGeometry.circular(8),
+                                              borderRadius:
+                                                  BorderRadiusGeometry.circular(
+                                                    8,
+                                                  ),
                                             ),
                                           ),
-                                          onPressed: () => Navigator.of(context).pop(true),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
                                           child: const Text(
                                             'Yes',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                         ),
                                       ),

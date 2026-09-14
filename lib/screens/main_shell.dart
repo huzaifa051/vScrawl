@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:vscrawl/screens/organization_edit_screen.dart';
 import 'package:vscrawl/widgets/scrawl_logo.dart';
 import '../utils/app_colors.dart';
 import 'home_screen.dart';
@@ -10,6 +9,10 @@ import 'documents_screen.dart';
 import 'dart:async';
 import '../screens/organization_screen.dart';
 import '../screens/organization_edit_screen.dart';
+import '../screens/users_screen.dart';
+import '../screens/business_app_screen.dart';
+
+enum _OrgView { main, edit, users, businessApps }
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -25,9 +28,9 @@ class _MainShellState extends State<MainShell> {
   String? _documentStatusFilter;
   String _documentCategoryLabel = 'All Documents';
 
-  bool _isEditingOrganization = false;
-  bool _isSearching = false;
+  _OrgView _orgView = _OrgView.main;
 
+  bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _debounce;
@@ -40,24 +43,57 @@ class _MainShellState extends State<MainShell> {
   ];
 
   void _openOrganizationEdit() {
-    setState(() => _isEditingOrganization = true);
+    setState(() => _orgView = _OrgView.edit);
   }
 
-  void _closeOrganizationEdit() {
-    setState(() => _isEditingOrganization = false);
+  void _openOrganizationUsers() {
+    setState(() => _orgView = _OrgView.users);
+  }
+
+  void _openOrganizationBusinessApps() {
+    setState(() => _orgView = _OrgView.businessApps);
+  }
+
+  void _closeOrganizationSubView() {
+    setState(() => _orgView = _OrgView.main);
+  }
+
+  void _navigateToOrganizationTab() {
+    setState(() {
+      _selectedIndex = 2;
+      _orgView = _OrgView.main;
+    });
+  }
+
+  Widget _buildOrganizationTab() {
+    switch (_orgView) {
+      case _OrgView.edit:
+        return OrganizationEditScreen(onDone: _closeOrganizationSubView);
+      case _OrgView.users:
+        return UsersScreen(onBack: _closeOrganizationSubView);
+      case _OrgView.businessApps:
+        return BusinessAppScreen(onBack: _closeOrganizationSubView);
+      case _OrgView.main:
+        return OrganizationScreen(
+          onEditOrganization: _openOrganizationEdit,
+          onViewUsers: _openOrganizationUsers,
+          onViewBusinessApps: _openOrganizationBusinessApps,
+        );
+    }
   }
 
   List<Widget> get _pages => [
-    HomeScreen(onCategoryTap: _handleDocumentCategorySelected),
+    HomeScreen(
+      onCategoryTap: _handleDocumentCategorySelected,
+      onNavigateToOrganization: _navigateToOrganizationTab,
+    ),
     DocumentsScreen(
       key: ValueKey("${_documentStatusFilter ?? 'all'}_$_searchQuery"),
       statusFilter: _documentStatusFilter,
       emptyStateLabel: _documentCategoryLabel,
       searchQuery: _searchQuery,
     ),
-    _isEditingOrganization
-        ? OrganizationEditScreen(onDone: _closeOrganizationEdit)
-        : OrganizationScreen(onEditOrganization: _openOrganizationEdit),
+    _buildOrganizationTab(),
     const _PlaceholderTab(label: 'Settings'),
   ];
 
@@ -87,6 +123,10 @@ class _MainShellState extends State<MainShell> {
         _isSearching = false;
         _searchController.clear();
         _searchQuery = '';
+      }
+
+      if (index != 2) {
+        _orgView = _OrgView.main;
       }
     });
   }
@@ -130,67 +170,76 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.pageBackground,
-        elevation: 0,
-        centerTitle: true,
-        leading: (_selectedIndex == 2 && _isEditingOrganization)
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: _closeOrganizationEdit,
-              )
-            : null,
-        title: _selectedIndex == 0
-            ? const ScrawlLogo()
-            : Text(
-                _selectedIndex == 1
-                    ? _documentCategoryLabel
-                    : _titles[_selectedIndex],
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        actions: _selectedIndex == 1
-            ? [
-                IconButton(
-                  icon: Icon(_isSearching ? Icons.close : Icons.search),
-                  onPressed: _isSearching ? _stopSearch : _startSearch,
-                ),
-              ]
-            : null,
-        bottom: (_isSearching && _selectedIndex == 1)
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(64),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: Container(
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      onChanged: _onSearchChanged,
-                      decoration: const InputDecoration(
-                        hintText: 'Search by document name, owner or status...',
-                        hintStyle: TextStyle(color: AppColors.textSecondary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: AppColors.textSecondary,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+      appBar:
+          (_selectedIndex == 2 &&
+              (_orgView == _OrgView.users || _orgView == _OrgView.businessApps))
+          ? null
+          : AppBar(
+              backgroundColor: AppColors.pageBackground,
+              elevation: 0,
+              centerTitle: true,
+              leading: (_selectedIndex == 2 && _orgView == _OrgView.edit)
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: _closeOrganizationSubView,
+                    )
+                  : null,
+              title: _selectedIndex == 0
+                  ? const ScrawlLogo()
+                  : Text(
+                      _selectedIndex == 1
+                          ? _documentCategoryLabel
+                          : _titles[_selectedIndex],
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                ),
-              )
-            : null,
-      ),
+              iconTheme: const IconThemeData(color: AppColors.textPrimary),
+              actions: _selectedIndex == 1
+                  ? [
+                      IconButton(
+                        icon: Icon(_isSearching ? Icons.close : Icons.search),
+                        onPressed: _isSearching ? _stopSearch : _startSearch,
+                      ),
+                    ]
+                  : null,
+              bottom: (_isSearching && _selectedIndex == 1)
+                  ? PreferredSize(
+                      preferredSize: const Size.fromHeight(64),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            onChanged: _onSearchChanged,
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Search by document name, owner or status...',
+                              hintStyle: TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: AppColors.textSecondary,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
       drawer: AppDrawer(
         onLogout: _handleLogout,
         onDocumentCategorySelected: _handleDocumentCategorySelected,

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:vscrawl/providers/organization_stats_provider.dart';
 import 'package:vscrawl/services/auth_service.dart';
 import '../utils/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -7,12 +8,18 @@ import '../providers/organization_provider.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import '../providers/business_app_provider.dart';
-import '../screens/business_app_screen.dart';
 
 class OrganizationScreen extends StatefulWidget {
   final VoidCallback onEditOrganization;
+  final VoidCallback onViewUsers;
+  final VoidCallback onViewBusinessApps;
 
-  const OrganizationScreen({super.key, required this.onEditOrganization});
+  const OrganizationScreen({
+    super.key,
+    required this.onEditOrganization,
+    required this.onViewUsers,
+    required this.onViewBusinessApps,
+  });
 
   @override
   State<OrganizationScreen> createState() => _OrganizationScreenState();
@@ -250,19 +257,20 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                   const SizedBox(height: 16),
 
                   _NavRow(label: 'Templates (15)', onTap: () {}),
-                  _NavRow(label: 'Users (40)', onTap: () {}),
+                  Consumer<OrganizationStatsProvider>(
+                    builder: (context, orgStats, _) {
+                      return _NavRow(
+                        label: 'Users (${orgStats.usersCount})',
+                        onTap: widget.onViewUsers,
+                      );
+                    },
+                  ),
                   Consumer<BusinessAppProvider>(
                     builder: (context, businessAppProvider, _) {
                       return _NavRow(
                         label:
                             'Business Apps (${businessAppProvider.totalElements})',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const BusinessAppScreen(),
-                            ),
-                          );
-                        },
+                        onTap: widget.onViewBusinessApps,
                       );
                     },
                   ),
