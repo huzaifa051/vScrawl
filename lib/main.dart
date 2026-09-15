@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:vscrawl/providers/business_app_provider.dart';
 import 'package:vscrawl/providers/user_provider.dart';
-import 'package:vscrawl/providers/users_list_provider.dart';
 import 'package:vscrawl/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/organization_provider.dart';
-import '../providers/organization_stats_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,9 +28,6 @@ void main() async {
         ChangeNotifierProvider.value(
           value: organizationProvider..fetchOrganization(),
         ),
-        ChangeNotifierProvider(create: (_) => BusinessAppProvider()),
-        ChangeNotifierProvider(create: (_) => OrganizationStatsProvider()),
-        ChangeNotifierProvider(create: (_) => UsersListProvider()),
       ],
       child: const MyApp(),
     ),

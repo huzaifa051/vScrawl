@@ -38,6 +38,10 @@ class AuthService {
       'https://api.staging.vscrawl.com/organization/v1/count/organization';
   static const String _usersUrl =
       'https://api.staging.vscrawl.com/organization/v1/users';
+  static const String _rolesUrl =
+      'https://api.staging.vscrawl.com/user/v1/roles/available';
+  static const String _inviteUserUrl =
+      'https://api.staging.vscrawl.com/organization/v1/user';
 
   static Future<Map<String, dynamic>> signIn({
     required String email,
@@ -601,18 +605,23 @@ class AuthService {
   static Future<Map<String, dynamic>> fetchOrganizationUsers({
     int page = 0,
     int size = 10,
+    String? searchValue,
   }) async {
     try {
       final userData = await PrefService.getUserData();
       final token = userData?['accessToken'] as String?;
 
-      final uri = Uri.parse(_usersUrl).replace(
-        queryParameters: {
-          'page': page.toString(),
-          'size': size.toString(),
-          'sort': ['isOwner,desc', 'createdAt,desc'],
-        },
-      );
+      final Map<String, String> queryParams = {
+        'page': page.toString(),
+        'size': size.toString(),
+        'sort': 'isOwner,desc',
+      };
+
+      if (searchValue != null && searchValue.trim().isNotEmpty) {
+        queryParams['multiSearchValue'] = searchValue.trim();
+      }
+
+      final uri = Uri.parse(_usersUrl).replace(queryParameters: queryParams);
 
       final response = await http.get(
         uri,
@@ -634,6 +643,71 @@ class AuthService {
     } catch (e) {
       if (e is NetworkException || e is Exception) rethrow;
       throw Exception('Failed to fetch users');
+    }
+  }
+
+  static Future<List<dynamic>> fetchAvailableRoles() async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final response = await http.get(
+        Uri.parse(_rolesUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      } else {
+        throw Exception('Failed to load roles (status ${response.statusCode})',
+        );
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to fetch roles');
+    }
+  }
+
+  static Future<void> inviteUser ({
+    required String name,
+    required String emailAddress,
+    required int roleId,
+}) async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final response = await http.post(
+        Uri.parse(_inviteUserUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'emailAddress': emailAddress,
+          'roleId': roleId,
+        }),
+      );
+      
+      debugPrintApiResponse(response);
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to invite user (status ${response.statusCode})',
+        );
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to invite user');
     }
   }
 

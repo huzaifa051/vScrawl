@@ -29,9 +29,6 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BusinessAppProvider>().fetchBusinessApps();
-    });
   }
 
   Uint8List? _decodeLogo(String? rawLogo) {
@@ -85,201 +82,204 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<OrganizationProvider>(
-      builder: (context, orgProvider, _) {
-        final org = orgProvider.organization;
+    return ChangeNotifierProvider(
+      create: (_) => OrganizationStatsProvider()..fetchOrganizationStats(),
+      child: Consumer<OrganizationProvider>(
+        builder: (context, orgProvider, _) {
+          final org = orgProvider.organization;
 
-        if (orgProvider.isLoading && org == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (org == null) {
-          return const Center(child: Text('Unable to load organization'));
-        }
-        final logoBytes = (org.logo != null && org.logo!.isNotEmpty)
-            ? _decodeLogo(org.logo)
-            : null;
+          if (orgProvider.isLoading && org == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (org == null) {
+            return const Center(child: Text('Unable to load organization'));
+          }
+          final logoBytes = (org.logo != null && org.logo!.isNotEmpty)
+              ? _decodeLogo(org.logo)
+              : null;
 
-        return Scaffold(
-          backgroundColor: AppColors.pageBackground,
-          body: SafeArea(
-            bottom: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Column(
-                        children: [
-                          Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: logoBytes != null
-                                    ? Image.memory(
-                                        logoBytes,
-                                        width: 188,
-                                        height: 175,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Container(
-                                        width: 110,
-                                        height: 110,
-                                        color: const Color(0xFF2D9CDB),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          _initialsFrom(org.name ?? ''),
-                                          style: const TextStyle(
-                                            fontSize: 34,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
+          return Scaffold(
+            backgroundColor: AppColors.pageBackground,
+            body: SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Column(
+                          children: [
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: logoBytes != null
+                                      ? Image.memory(
+                                          logoBytes,
+                                          width: 188,
+                                          height: 175,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Container(
+                                          width: 110,
+                                          height: 110,
+                                          color: const Color(0xFF2D9CDB),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            _initialsFrom(org.name ?? ''),
+                                            style: const TextStyle(
+                                              fontSize: 34,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: GestureDetector(
+                                    onTap: () => _handleChangeLogo(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
                                       ),
-                              ),
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: GestureDetector(
-                                  onTap: () => _handleChangeLogo(context),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
+                                      child: const Icon(Icons.edit, size: 16),
                                     ),
-                                    child: const Icon(Icons.edit, size: 16),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            org.name ?? '',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              ],
                             ),
+                            const SizedBox(height: 12),
+                            Text(
+                              org.name ?? '',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: GestureDetector(
+                            onTap: widget.onEditOrganization,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 16),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: GestureDetector(
-                          onTap: widget.onEditOrganization,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.edit_outlined, size: 16),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Edit',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Owner',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 2),
+                          Text(
+                            org.owner?.name ?? '',
+                            style: const TextStyle(fontSize: 15),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Email',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            org.owner?.emailAddress ?? '',
+                            style: const TextStyle(fontSize: 15),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Owner',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          org.owner?.name ?? '',
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Email',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          org.owner?.emailAddress ?? '',
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  _NavRow(label: 'Templates (15)', onTap: () {}),
-                  Consumer<OrganizationStatsProvider>(
-                    builder: (context, orgStats, _) {
-                      return _NavRow(
-                        label: 'Users (${orgStats.usersCount})',
-                        onTap: widget.onViewUsers,
-                      );
-                    },
-                  ),
-                  Consumer<BusinessAppProvider>(
-                    builder: (context, businessAppProvider, _) {
-                      return _NavRow(
-                        label:
-                            'Business Apps (${businessAppProvider.totalElements})',
-                        onTap: widget.onViewBusinessApps,
-                      );
-                    },
-                  ),
-                ],
+                    _NavRow(label: 'Templates (15)', onTap: () {}),
+                    Consumer<OrganizationStatsProvider>(
+                      builder: (context, orgStats, _) {
+                        return _NavRow(
+                          label: 'Users (${orgStats.usersCount})',
+                          onTap: widget.onViewUsers,
+                        );
+                      },
+                    ),
+                    Consumer<OrganizationStatsProvider>(
+                      builder: (context, orgStats, _) {
+                        return _NavRow(
+                          label:
+                              'Business Apps (${orgStats.businessAppsCount})',
+                          onTap: widget.onViewBusinessApps,
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

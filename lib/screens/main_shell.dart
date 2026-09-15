@@ -219,9 +219,10 @@ class _MainShellState extends State<MainShell> {
                             controller: _searchController,
                             autofocus: true,
                             onChanged: _onSearchChanged,
-                            decoration: const InputDecoration(
-                              hintText:
-                                  'Search by document name, owner or status...',
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Search',
                               hintStyle: TextStyle(
                                 color: AppColors.textSecondary,
                               ),
@@ -229,9 +230,20 @@ class _MainShellState extends State<MainShell> {
                                 Icons.search,
                                 color: AppColors.textSecondary,
                               ),
-                              border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(
                                 vertical: 12,
+                                horizontal: 16,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(7),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(7),
+                                borderSide: const BorderSide(
+                                  color: AppColors.accent,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                           ),
