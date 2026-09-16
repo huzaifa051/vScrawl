@@ -4,6 +4,7 @@ import '../utils/app_colors.dart';
 import '../providers/users_list_provider.dart';
 import '../models/users_list_model.dart';
 import 'dart:async';
+import '../screens/invite_user_screen.dart';
 
 class UsersScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -99,7 +100,11 @@ class _UsersScreenState extends State<UsersScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const InviteUserScreen()),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
