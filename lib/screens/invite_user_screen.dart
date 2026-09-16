@@ -162,6 +162,7 @@ class _InviteUserScreenState extends State<InviteUserScreen> {
                         child: Center(child: CircularProgressIndicator()),
                       )
                     : DropdownButtonFormField<int>(
+                        dropdownColor: AppColors.pageBackground,
                         value: _selectedRoleId,
                         decoration: _fieldDecoration(),
                         hint: const Text('--Select--'),
@@ -191,7 +192,7 @@ class _InviteUserScreenState extends State<InviteUserScreen> {
                       disabledBackgroundColor: AppColors.accent,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(7),
                       ),
                     ),
                     child: _isSubmitting
