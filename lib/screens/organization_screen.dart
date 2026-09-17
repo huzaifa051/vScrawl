@@ -13,12 +13,14 @@ class OrganizationScreen extends StatefulWidget {
   final VoidCallback onEditOrganization;
   final VoidCallback onViewUsers;
   final VoidCallback onViewBusinessApps;
+  final VoidCallback onViewTemplates;
 
   const OrganizationScreen({
     super.key,
     required this.onEditOrganization,
     required this.onViewUsers,
     required this.onViewBusinessApps,
+    required this.onViewTemplates,
   });
 
   @override
@@ -255,7 +257,14 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    _NavRow(label: 'Templates (15)', onTap: () {}),
+                    Consumer<OrganizationStatsProvider>(
+                      builder: (context, orgStats, _) {
+                        return _NavRow(
+                          label: 'Templates (${orgStats.templatesCount})',
+                          onTap: widget.onViewTemplates,
+                        );
+                      },
+                    ),
                     Consumer<OrganizationStatsProvider>(
                       builder: (context, orgStats, _) {
                         return _NavRow(

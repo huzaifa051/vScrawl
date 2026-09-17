@@ -42,6 +42,10 @@ class AuthService {
       'https://api.staging.vscrawl.com/user/v1/roles/available';
   static const String _inviteUserUrl =
       'https://api.staging.vscrawl.com/organization/v1/user';
+  static const String _templatesUrl =
+      'https://api.staging.vscrawl.com/organization/v1/templates';
+  static const String _templatesFoldersUrl =
+      'https://api.staging.vscrawl.com/organization/v1/template-folders';
 
   static Future<Map<String, dynamic>> signIn({
     required String email,
@@ -664,8 +668,7 @@ class AuthService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
       } else {
-        throw Exception('Failed to load roles (status ${response.statusCode})',
-        );
+        throw Exception('Failed to load roles (status ${response.statusCode})');
       }
     } on SocketException {
       throw NetworkException('No internet connection');
@@ -675,11 +678,11 @@ class AuthService {
     }
   }
 
-  static Future<void> inviteUser ({
+  static Future<void> inviteUser({
     required String name,
     required String emailAddress,
     required int roleId,
-}) async {
+  }) async {
     try {
       final userData = await PrefService.getUserData();
       final token = userData?['accessToken'] as String?;
@@ -696,11 +699,12 @@ class AuthService {
           'roleId': roleId,
         }),
       );
-      
+
       debugPrintApiResponse(response);
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Failed to invite user (status ${response.statusCode})',
+        throw Exception(
+          'Failed to invite user (status ${response.statusCode})',
         );
       }
     } on SocketException {
@@ -708,6 +712,74 @@ class AuthService {
     } catch (e) {
       if (e is NetworkException || e is Exception) rethrow;
       throw Exception('Failed to invite user');
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchTemplates({
+    int page = 0,
+    int size = 10,
+  }) async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final uri = Uri.parse(_templatesUrl).replace(
+        queryParameters: {
+          'page': page.toString(),
+          'size': size.toString(),
+          'sort': 'id,desc',
+        },
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application,json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception(
+          'Failed to load templates (status ${response.statusCode})',
+        );
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to fetch templates');
+    }
+  }
+
+  static Future<List<dynamic>> fetchTemplateFolders() async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final response = await http.get(
+        Uri.parse(_templatesFoldersUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token'
+        }
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      } else {
+        throw Exception('Failed to load folders (status ${response.statusCode})');
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      throw Exception('Failed to fetch folders');
     }
   }
 

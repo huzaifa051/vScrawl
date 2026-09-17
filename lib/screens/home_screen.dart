@@ -6,6 +6,7 @@ import '../providers/dashboard_provider.dart';
 import '../providers/organization_stats_provider.dart';
 import '../screens/business_app_screen.dart';
 import '../screens/users_screen.dart';
+import '../screens/templates_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(String? status, String label) onCategoryTap;
@@ -51,7 +52,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -150,15 +153,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Icons.send_outlined,
                                             size: 16,
                                           ),
-                                          label: const Text('Request Signature'),
+                                          label: const Text(
+                                            'Request Signature',
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.accent,
                                             foregroundColor: Colors.white,
                                             elevation: 0,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                24,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
                                             ),
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
@@ -258,7 +262,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             final sent = dash?.sentDocCount?.toString() ?? '0';
                             final completed =
                                 dash?.completedDocCount?.toString() ?? '0';
-                            final draft = dash?.draftDocCount?.toString() ?? '0';
+                            final draft =
+                                dash?.draftDocCount?.toString() ?? '0';
                             final voidCount =
                                 dash?.voidDocCount?.toString() ?? '0';
 
@@ -276,8 +281,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   iconBg: const Color(0xFFFCEEE0),
                                   value: pending,
                                   label: 'Pending',
-                                  onTap: () =>
-                                      widget.onCategoryTap('PENDING', 'Pending'),
+                                  onTap: () => widget.onCategoryTap(
+                                    'PENDING',
+                                    'Pending',
+                                  ),
                                 ),
                                 _DocStatCard(
                                   icon: Icons.edit_outlined,
@@ -385,6 +392,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   iconBg: const Color(0xFFE4F2FA),
                                   value: '${orgStats.templatesCount}',
                                   label: 'Templates',
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const TemplatesScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
                                 _DocStatCard(
                                   icon: Icons.groups_outlined,

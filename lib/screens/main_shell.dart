@@ -11,8 +11,9 @@ import '../screens/organization_screen.dart';
 import '../screens/organization_edit_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/business_app_screen.dart';
+import '../screens/templates_screen.dart';
 
-enum _OrgView { main, edit, users, businessApps }
+enum _OrgView { main, edit, users, businessApps, templates }
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -65,6 +66,9 @@ class _MainShellState extends State<MainShell> {
     });
   }
 
+  void _openOrganizationTemplates() =>
+      setState(() => _orgView = _OrgView.templates);
+
   Widget _buildOrganizationTab() {
     switch (_orgView) {
       case _OrgView.edit:
@@ -73,11 +77,14 @@ class _MainShellState extends State<MainShell> {
         return UsersScreen(onBack: _closeOrganizationSubView);
       case _OrgView.businessApps:
         return BusinessAppScreen(onBack: _closeOrganizationSubView);
+      case _OrgView.templates:
+        return TemplatesScreen(onBack: _closeOrganizationSubView);
       case _OrgView.main:
         return OrganizationScreen(
           onEditOrganization: _openOrganizationEdit,
           onViewUsers: _openOrganizationUsers,
           onViewBusinessApps: _openOrganizationBusinessApps,
+          onViewTemplates: _openOrganizationTemplates,
         );
     }
   }
@@ -172,7 +179,9 @@ class _MainShellState extends State<MainShell> {
       backgroundColor: AppColors.pageBackground,
       appBar:
           (_selectedIndex == 2 &&
-              (_orgView == _OrgView.users || _orgView == _OrgView.businessApps))
+              (_orgView == _OrgView.users ||
+                  _orgView == _OrgView.businessApps ||
+                  _orgView == _OrgView.templates))
           ? null
           : AppBar(
               backgroundColor: AppColors.pageBackground,
