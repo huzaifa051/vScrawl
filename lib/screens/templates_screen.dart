@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/templates_provider.dart';
+import '../widgets/create_folder_dialog.dart';
 
 class TemplatesScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -335,7 +336,15 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.accent,
-            onPressed: () {},
+            onPressed: () async {
+              final created = await showDialog<bool>(
+                context: innerContext,
+                builder: (_) => const CreateFolderDialog(),
+              );
+              if (created == true) {
+                innerContext.read<TemplatesProvider>().fetchTemplates();
+              }
+            },
             child: const Icon(
               Icons.create_new_folder_outlined,
               color: Colors.white,

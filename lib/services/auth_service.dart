@@ -783,6 +783,39 @@ class AuthService {
     }
   }
 
+  static Future<void> createTemplateFolder({
+    required String name,
+    int? parentFolderId,
+  }) async {
+    try {
+      final userData = await PrefService.getUserData();
+      final token = userData?['accessToken'] as String?;
+
+      final response = await http.post(
+        Uri.parse(_templatesFoldersUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'parentFolderId': parentFolderId,
+        }),
+      );
+
+      debugPrintApiResponse(response);
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to create folder (status ${response.statusCode})');
+      }
+    } on SocketException {
+      throw NetworkException('No internet connection');
+    } catch (e) {
+      if (e is NetworkException || e is Exception) rethrow;
+      throw Exception('Failed to create folder');
+    }
+  }
+
   static void debugPrintApiResponse(http.Response response) {
     print('API status: ${response.statusCode}');
     print('API body: ${response.body}');
